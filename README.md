@@ -58,3 +58,7 @@ The data architecture for this project follows Medallion Architecture **Bronze**
 3. **Gold Layer**: Houses business-ready data modeled into a star schema required for reporting and analytics
 - Data Modeling  
 - Data Analytics  
+
+## Disclaimer
+In this project, I followed the method of Mr. Baraa. For more information, please refer to his [YouTube channel](https://www.youtube.com/watch?v=9GVqKuTVANE&t=4050s) ,
+or his [GitHub profile](https://github.com/DataWithBaraa). 
