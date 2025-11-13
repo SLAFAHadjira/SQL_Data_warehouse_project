@@ -1,0 +1,93 @@
+-- Advanced analysis 
+--CHANGE OVER TIME 
+select 
+	YEAR(order_date) as year ,
+	DATEPART(QUARTER,order_date ) as quarter ,
+	sum(sales_amount) as total_sales_amount ,
+	count ( distinct customer_key) as unique_customers ,
+	SUM ( quantity) as Total_quantity 
+from gold.fact_sales
+where  order_date is not null 
+group by YEAR(order_date) ,DATEPART(QUARTER,order_date)
+order by year ,DATEPART(QUARTER,order_date )
+
+--METHODE 2 
+select 
+	DATETRUNC(MONTH,order_date) as date ,
+	sum(sales_amount) as total_sales_amount ,
+	count ( distinct customer_key) as unique_customers ,
+	SUM ( quantity) as Total_quantity 
+from gold.fact_sales
+where  order_date is not null 
+group by DATETRUNC(MONTH,order_date)
+order by DATETRUNC(MONTH,order_date) 
+
+--CUMULATIVE ANALYSIS 
+--calculate the total sales per month and running total of sales over time 
+
+select 
+	month_order ,
+	total_sales,
+	SUM(total_sales) over(  order by month_order) as running_total,
+	AVG(avg_price) over (order by month_order ) as Moving_averege
+from (
+		select 
+			MONTH (order_date) as month_order,
+			SUM(sales_amount) as total_sales ,
+			AVG(price) as avg_price
+		from gold.fact_sales
+		where order_date is not null 
+		group by MONTH (order_date) 
+		) h ;
+
+
+select 
+date_orders,
+total_sales ,
+sum(total_sales) over (order by  date_orders) as running_totals ,
+AVG(avg_price) over (order by date_orders ) as Moving_averege
+from (
+		select 
+			DATEPART( quarter, order_date ) as date_orders,
+			SUM(sales_amount) as total_sales ,
+			AVG(price) as avg_price 
+		from gold.fact_sales
+		where order_date is not null 
+		group by  DATEPART( quarter, order_date )) h 
+
+
+
+
+
+
+ --Year Over Year Analysis 
+With CTE as (
+select 
+YEAR(sl.order_date) as year_order,
+ pr.product_name ,
+ sum(sl.sales_amount) as Total_sales
+ from gold.fact_sales sl
+ left join gold.dim_products pr
+ on sl.product_key = pr.product_key
+ where sl.order_date is not null
+ group by YEAR(sl.order_date) ,
+ pr.product_name )
+
+ SELECT 
+	 year_order,
+	 product_name,
+	 Total_sales,
+	 AVG(Total_sales) over (partition by product_name) avg_current_sales,
+	 Total_sales - AVG(Total_sales) over (partition by product_name)  as diff_avg,
+	 case when Total_sales - AVG(Total_sales) over (partition by product_name) >0 then 'Above Avg'
+		  when Total_sales - AVG(Total_sales) over (partition by product_name) <0then 'Below Avg'
+		  ELSE 'Avg'
+		  end as satement,
+	LAG(Total_sales) over (partition by product_name order by year_order) as previous_year ,
+	Total_sales - LAG(Total_sales) over (partition by product_name order by year_order) as diff_years ,
+	case when Total_sales - LAG(Total_sales) over (partition by product_name order by year_order) > 0 then 'Increase'
+		when Total_sales - LAG(Total_sales) over (partition by product_name order by year_order) <0 THEN 'Decrease'
+		ELSE 'Same Last Year'
+		end as  Improve_of_sales 
+ FROM CTE 
+ order by product_name , year_order 
