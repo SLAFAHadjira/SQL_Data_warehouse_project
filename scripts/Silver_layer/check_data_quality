@@ -1,1 +1,34 @@
+- How choose the right row of all duplicate 
+select prd_id,
+count(*)
+from bronze.crm_prd_info
+group by prd_id
+having count(*) >1;
+
+select * from [bronze].[crm_prd_info]
+
+select *,
+	ROW_NUMBER() over(partition by cst_id order by cst_create_date desc ) as Row_rank 
+from bronze.crm_prd_info
+
+
+
+--Check unwanted space with TRIM function 
+
+select prd_nm
+from silver.crm_prd_info
+where prd_nm != TRIM(prd_nm) ;
+
+
+--data standardization & consistency
+select distinct prd_line
+from silver.crm_prd_info ;
+
+
+--check Invalid date 
+select [prd_start_dt]
+      ,[prd_end_dt]
+from silver.crm_prd_info
+where  prd_end_dt < prd_start_dt  ;
+
 
