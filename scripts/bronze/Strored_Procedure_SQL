@@ -1,4 +1,5 @@
 
+
 CREATE or alter procedure bronze.load_bronze as 
 BEGIN 
 		truncate table [bronze].[crm_cust_info];
